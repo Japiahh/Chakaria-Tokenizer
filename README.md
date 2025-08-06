@@ -67,7 +67,7 @@ texts = [
     "kapanpun kamu siap, aku akan datang",
     "bersama dengannya", 
     "berjalan bersama-sama",
-    "semoga kamu baik-baik saja",
+    "semoga kamu baik-baik saja"
 ]
 ```
 
