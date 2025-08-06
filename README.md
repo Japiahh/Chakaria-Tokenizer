@@ -127,6 +127,6 @@ texts = [
 
 ---
 
-Built with pain and black coffee
+Built with pain and black coffee.
 
-Thanks Risa
+Thanks Risa.
