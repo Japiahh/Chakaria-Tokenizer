@@ -1,4 +1,4 @@
-from chakaria import ChakariaTokenizer
+from tokenizer.chakaria import ChakariaTokenizer
 
 tokenizer = ChakariaTokenizer()
 
@@ -25,4 +25,5 @@ texts = [
 for i, text in enumerate(texts):
     print(f"\n[Kalimat {i+1}]: {text}")
     tokens = tokenizer.tokenize(text)
+
     print("→ Token:", tokens)
