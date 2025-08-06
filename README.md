@@ -34,30 +34,6 @@ Input Text
 
 ---
 
-## Module
-
-### Handle
-#### handle_punctuation()
-Handles punctuation marks while preserving valid compound words and reduplication patterns.
-
-#### handle_repeats()
-Detects and splits repeated words logically (e.g., anak-anak → anak, anak).
-
-### split
-#### split_affixes()
-Orchestrates prefix and suffix separation per token, cross-validating against a base word list.
-
-#### split_prefix()
-Detects prefixes using ordered regex patterns, Prevents over-splitting by checking the remaining token against valid base words.
-
-#### split_suffix()
-Applies suffix patterns from the end of tokens, Ensures suffix is only separated when root is valid.
-
-#### split_particles()
-Identifies light sentence particles, Separates particles into standalone tokens without altering the core meaning.
-
----
-
 Built with pain and black coffee
 
 Thanks Risa
