@@ -9,7 +9,6 @@ class ChakariaTokenizer:
         enable_split_particles=True,
         enable_handle_confixes=True,
         use_base_words=True,
-        verbose=False,
     ):
         # Konfigurasi fitur
         self.enable_split_affixes = enable_split_affixes
@@ -17,7 +16,6 @@ class ChakariaTokenizer:
         self.enable_split_particles = enable_split_particles
         self.enable_handle_confixes = enable_handle_confixes
         self.use_base_words = use_base_words
-        self.verbose = verbose
 
         # Prefix dan suffix (tanpa tanda '-')
         self.prefixes = ["meng", "meny", "mem", "men", "me", "ber", "ter", "se", "diper", "per", "pe", "di", "ke"]
@@ -298,3 +296,4 @@ class ChakariaTokenizer:
                 processed.append(token)
 
         return processed
+
