@@ -25,10 +25,8 @@ class ChakariaTokenizer:
 
         self.particles = ["-lah", "-kah", "-tah", "-pun", "-ku", "-mu"]
 
-        # Muat daftar kata dasar
         self.kata_dasar = self.load_base_words()
 
-#fungsi pedukung
     def load_base_words(self):
         """
         Memuat daftar kata dasar dari file eksternal untuk referensi pemrosesan morfologi.
@@ -48,7 +46,6 @@ class ChakariaTokenizer:
         from data import kadas
         return set(kadas["kata_dasar"])
 
-#fungsi utama
     def tokenize(self, text):
         """
         Fungsi utama tokenisasi.
@@ -107,20 +104,11 @@ class ChakariaTokenizer:
 
         return tokens
 
-#fungsi Tokenizer
     def is_base_word(self, token):
         """
         Cek apakah token adalah kata dasar.
         """
         return token in self.kata_dasar
-
-    
-#fungsi handle
-    """
-    1. punctuation
-    2. repeats
-    3. compound
-    """
 
     def handle_punctuation(self, tokens):
         """
@@ -129,7 +117,6 @@ class ChakariaTokenizer:
         """
         processed = []
         for token in tokens:
-            # Pisahkan tanda baca di awal dan akhir token
             split = re.findall(r"\w+|[.,!?;:\-\"'\(\)]", token)
             processed.extend(split)
         return processed
@@ -142,7 +129,6 @@ class ChakariaTokenizer:
         result = []
 
         for token in tokens:
-            # Kasus eksplisit dengan tanda strip: anak-anak
             if '-' in token:
                 parts = token.split('-')
                 if len(parts) == 2 and parts[0] == parts[1]:
@@ -154,7 +140,6 @@ class ChakariaTokenizer:
 
             found = False
 
-            # Tangani prefiks + kata ulang (misal: berjalanjalan)
             for prefix in self.prefixes:
                 if token.startswith(prefix):
                     sisa = token[len(prefix):]
@@ -170,7 +155,6 @@ class ChakariaTokenizer:
             if found:
                 continue
 
-            # Kata ulang biasa tanpa prefiks
             if len(token) % 2 == 0:
                 half = len(token) // 2
                 part1 = token[:half]
@@ -312,4 +296,5 @@ class ChakariaTokenizer:
                         break
             if not matched:
                 processed.append(token)
+
         return processed
