@@ -9,7 +9,7 @@ Chakaria-Tokenizer is a lightweight text preprocessing tool specifically designe
 * Base word checking with optional fallback handling
 * Affix separation (prefixes and suffixes) based on regex patterns
 * Punctuation handling and token isolation
-* Reduplication processing (e.g., anak-anak → anak, anak)
+* Reduplication processing (e.g., "anak-anak" → "anak", "-", "anak")
 * Particle splitting ("pergilah" → "pergi", "-lah")
 * Clean output with no empty tokens
 
