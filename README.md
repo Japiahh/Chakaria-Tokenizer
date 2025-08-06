@@ -83,7 +83,7 @@ texts = [
 → Token: ['anak', '-', 'anak', 'ber-', 'main', 'bola', 'di', 'lapang', '-an', '.']
 
 [Kalimat 4]: Dia memakan makanannya dengan lahap.
-→ Token: ['dia', 'mem-', 'akan', 'makan', '-annya', 'dengan', 'lahap', '.']
+→ Token: ['dia', 'memakan', 'makan', '-annya', 'dengan', 'lahap', '.']
 
 [Kalimat 5]: Pergilah sekarang juga!
 → Token: ['pergi', '-lah', 'sekarang', 'juga', '!']
