@@ -1,7 +1,7 @@
 # Chakaria-Tokenizer
 I built Tokenizer for Indonesian Language Data Cleaning
 
-Chakaria-Tokenizer is a lightweight text preprocessing tool specifically designed for Indonesian text normalization and tokenization. This tool breaks down words into their meaningful components while preserving semantic structure, making it useful for linguistic research, NLP applications, or data cleaning tasks involving Bahasa Indonesia.
+Chakaria-Tokenizer is a text preprocessing tool specifically designed for Indonesian text  tokenization. This tool breaks down words into their meaningful components while preserving semantic structure, making it useful for linguistic, NLP applications, or data cleaning tasks involving Bahasa Indonesia.
 
 ---
 
