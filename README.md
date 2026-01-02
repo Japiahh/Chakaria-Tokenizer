@@ -1,4 +1,4 @@
-<h1 align="center"><img align="center" height="35" src="https://i.imgflip.com/adfpaj.gif"/>Linear-Regression-with-R<img align="center" height="35" src="https://i.imgflip.com/adfpaj.gif"/></h1>
+<h1 align="center"><img align="center" height="35" src="https://i.imgflip.com/adfpaj.gif"/>Chakaria-Tokenizer<img align="center" height="35" src="https://i.imgflip.com/adfpaj.gif"/></h1>
 I built Tokenizer for Indonesian Language Data Cleaning
 
 Chakaria-Tokenizer is a specialized text preprocessing tool designed to handle the linguistic complexity of Bahasa Indonesia. Unlike standard white space tokenizers, Chakaria employs a hybrid approach combining rule based morphological segmentation with dictionary based validation to break down words into their meaningful components (stems, affixes, particles) while preserving semantic structure.
