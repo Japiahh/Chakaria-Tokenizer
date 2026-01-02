@@ -9,7 +9,7 @@ This tool is optimized for NLP pipelines, linguistic analysis, and deep data cle
 
 ---
 
-## Latest Updates
+<h2 align="left">Chakaria-Tokenizer<img align="center" height="35" src="https://i.imgflip.com/adfpaj.gif"/></h2>
 
 We have significantly upgraded the core tokenization logic to handle complex agglutination cases:
 
