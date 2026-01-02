@@ -9,9 +9,9 @@ This tool is optimized for NLP pipelines, linguistic analysis, and deep data cle
 
 ---
 
-<h2 align="left">Chakaria-Tokenizer <img align="center" height="35" src="https://i.imgflip.com/adfpaj.gif"/></h2>
+<h2 align="left">Updates<img align="center" height="35" src="https://i.imgflip.com/adfpaj.gif"/></h2>
 
-We have significantly upgraded the core tokenization logic to handle complex agglutination cases:
+I have significantly upgraded the core tokenization logic to handle complex agglutination cases:
 
 * **Deep Recursive Validation:** The tokenizer now verifies the deep root of a word before splitting. This prevents over stemming (ensuring *'menang'* remains *'menang'*, not *'me-' + 'nang'* unless *'nang'* is a valid root).
 * **Process-Oriented Splitting:** Removed Early Exit limitations. Words are now analyzed for morphological structure even if they exist in the dictionary (*'memakan'* is correctly split into `['me-', 'makan']` instead of remaining `['memakan']`).
