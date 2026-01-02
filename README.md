@@ -1,36 +1,60 @@
 # Chakaria-Tokenizer
 I built Tokenizer for Indonesian Language Data Cleaning
 
-Chakaria-Tokenizer is a text preprocessing tool specifically designed for Indonesian text  tokenization. This tool breaks down words into their meaningful components while preserving semantic structure, making it useful for linguistic, NLP applications, or data cleaning tasks involving Bahasa Indonesia.
+Chakaria-Tokenizer is a specialized text preprocessing tool designed to handle the linguistic complexity of Bahasa Indonesia. Unlike standard white-space tokenizers, Chakaria employs a hybrid approach—combining rule-based morphological segmentation with dictionary-based validation—to break down words into their meaningful components (stems, affixes, particles) while preserving semantic structure.
+
+This tool is optimized for NLP pipelines, linguistic analysis, and deep data cleaning tasks where understanding word structure is crucial.
 
 ---
 
-## Features
-* Base word checking with optional fallback handling
-* Affix separation (prefixes and suffixes) based on regex patterns
-* Punctuation handling and token isolation
-* Reduplication processing (e.g., "anak-anak" → "anak", "-", "anak")
-* Particle splitting ("pergilah" → "pergi", "-lah")
-* Clean output with no empty tokens
+## Latest Updates
+
+We have significantly upgraded the core tokenization logic to handle complex agglutination cases:
+
+* **Deep Recursive Validation:** The tokenizer now verifies the "deep root" of a word before splitting. This prevents over-stemming (e.g., ensuring *'menang'* remains *'menang'*, not *'me-' + 'nang'* unless *'nang'* is a valid root).
+* **Process-Oriented Splitting:** Removed "Early Exit" limitations. Words are now analyzed for morphological structure even if they exist in the dictionary (e.g., *'memakan'* is correctly split into `['me-', 'makan']` instead of remaining `['memakan']`).
+* **Greedy Affix Matching:** Implemented length-priority sorting to ensure the longest valid prefix/suffix is processed first (e.g., distinguishing *'meng-'* from *'me-'*).
+* **Smart Clitic & Particle Handling:** Improved logic for separating enclitics (e.g., *-ku*, *-mu*, *-nya*) and particles (e.g., *-lah*, *-kah*) without breaking the root word.
+
+---
+
+## Key Features
+
+* **Hybrid Tokenization:** Combines regex patterns for affix detection with a comprehensive base word dictionary (`kata_dasar`) for validation.
+* **Morphological Segmentation:**
+    * **Prefixes:** Separates active/passive markers (e.g., *'mem-*, *'ber-'*, *'di-'*).
+    * **Suffixes:** Isolates transitive/benefactive markers (e.g., *'-kan'*, *'-i'*, *'-an'*).
+* **Reduplication Normalization:** Handles Indonesian repetition patterns (e.g., *"anak-anak"* → `"anak"`, `"-"`, `"anak"`).
+* **Particle & Clitic Isolation:** Cleanly splits sentence particles ("pergilah" → "pergi", "-lah").
+* **Punctuation Handling:** Context-aware separation of punctuation from words.
+* **Clean Output:** Automatically filters empty tokens and noise.
 
 ---
  
 ## Tokenization Pipeline Overview
 ```bash
-Input Text
-   │
-   └─▶ Base Word Checker
-            │
-            └─▶ pre_handle_split (for unmatched tokens)
-                       │
-                       └─▶ Empty Token Filtering
+graph TD
+    A[Input Text] --> B(Basic Split & Lowercase)
+    B --> C{Base Word Check}
+    C -- Matched --> D[Final Token]
+    C -- Unmatched / Morphological Mode --> E[pre_handle_split]
+    
+    subgraph "Morphological Processing"
+    E --> F[Handle Punctuation]
+    F --> G[Handle Repeats / Reduplication]
+    G --> H[Split Particles]
+    H --> I[Split Affixes & Deep Root Check]
+    end
+    
+    I --> J[Greedy Dictionary Re-Merge]
+    J --> K[Final Token List]
 ```
 
-### pre_handle_split Steps:
-1. handle_punctuation – separates punctuation marks from words, handles hyphenated reduplications and compounds.
-2. split_affixes – detects and isolates prefixes and suffixes using regex validation.
-3. handle_repeats – normalizes reduplication (e.g., "berjalan-jalan").
-4. split_particles – separates sentence particles (e.g., "-lah", "-pun", "-kah", "-tah").
+### Processing Steps Detail:
+1. Handle Punctuation: Separates non-alphanumeric characters while respecting hyphenated compound words.
+2. Handle Repeats: Detects and standardizes reduplicated words (kata ulang).
+3. Split Particles: Detaches particles (-lah, -kah, -tah, -pun) only if the remaining stem is valid.
+4. Split Affixes: The core engine. It iteratively strips prefixes and suffixes, validating the remaining stem against the dictionary at every step to ensure linguistic validity.
 
 ---
 
@@ -52,7 +76,6 @@ for i, text in enumerate(texts):
 ```bash
 texts = [
     "Berjalan-jalanlah di taman itu.",
-    "dimana",
     "Anak-anak bermain bola di lapangan.",
     "Dia memakan makanannya dengan lahap.",
     "Pergilah sekarang juga!",
@@ -60,69 +83,35 @@ texts = [
     "terima kasih atas makanannya.",
     "kenapa demikian?",
     "sama-sama",
-    "apakah kamu baik-baik saja?",
-    "12.000 rupiah",
-    "aku hanya punya 2rb",
-    "sejuta akanku ambil",
-    "kapanpun kamu siap, aku akan datang",
-    "bersama dengannya", 
-    "berjalan bersama-sama",
-    "semoga kamu baik-baik saja"
 ]
+
 ```
 
 ### Result
 ```bash
 [Kalimat 1]: Berjalan-jalanlah di taman itu.
-→ Token: ['ber-', 'jalan', '-', 'jalan', '-lah', 'di', 'taman', 'itu', '.']
+Token: ['ber-', 'jalan', '-', 'jalan', '-lah', 'di', 'taman', 'itu', '.']
 
-[Kalimat 2]: dimana
-→ Token: ['dimana']
+[Kalimat 2]: Anak-anak bermain bola di lapangan.
+Token: ['anak', '-', 'anak', 'ber-', 'main', 'bola', 'di', 'lapang', '-an', '.']
 
-[Kalimat 3]: Anak-anak bermain bola di lapangan.
-→ Token: ['anak', '-', 'anak', 'ber-', 'main', 'bola', 'di', 'lapang', '-an', '.']
+[Kalimat 3]: Dia memakan makanannya dengan lahap.
+Token: ['dia', 'me-', 'makan', 'makan', '-an', '-nya', 'dengan', 'lahap', '.']
 
-[Kalimat 4]: Dia memakan makanannya dengan lahap.
-→ Token: ['dia', 'memakan', 'makan', '-annya', 'dengan', 'lahap', '.']
+[Kalimat 4]: Pergilah sekarang juga!
+Token: ['pergi', '-lah', 'sekarang', 'juga', '!']
 
-[Kalimat 5]: Pergilah sekarang juga!
-→ Token: ['pergi', '-lah', 'sekarang', 'juga', '!']
+[Kalimat 5]: Kucingku sangat lucu dan manja.
+Token: ['kucing', '-ku', 'sangat', 'lucu', 'dan', 'manja', '.']
 
-[Kalimat 6]: Kucingku sangat lucu dan manja.
-→ Token: ['kucing', '-ku', 'sangat', 'lucu', 'dan', 'manja', '.']
+[Kalimat 6]: terima kasih atas makanannya.
+Token: ['terima', 'kasih', 'atas', 'makan', '-an', '-nya', '.']
 
-[Kalimat 7]: terima kasih atas makanannya.
-→ Token: ['terima', 'kasih', 'atas', 'makan', '-annya', '.']
+[Kalimat 7]: kenapa demikian?
+Token: ['kenapa', 'demikian', '?']
 
-[Kalimat 8]: kenapa demikian?
-→ Token: ['kenapa', 'demikian', '?']
-
-[Kalimat 9]: sama-sama
-→ Token: ['sama', '-', 'sama']
-
-[Kalimat 10]: apakah kamu baik-baik saja?
-→ Token: ['apa', '-kah', 'kamu', 'baik', '-', 'baik', 'saja', '?']
-
-[Kalimat 11]: 12.000 rupiah
-→ Token: ['12', '.', '000', 'rupiah']
-
-[Kalimat 12]: aku hanya punya 2rb
-→ Token: ['aku', 'hanya', 'punya', '2rb']
-
-[Kalimat 13]: sejuta akanku ambil
-→ Token: ['se-', 'juta', 'akan', '-ku', 'ambil']
-
-[Kalimat 14]: kapanpun kamu siap, aku akan datang
-→ Token: ['kapan', '-pun', 'kamu', 'siap', ',', 'aku', 'akan', 'datang']
-
-[Kalimat 15]: bersama dengannya
-→ Token: ['ber-', 'sama', 'dengan', '-nya']
-
-[Kalimat 16]: berjalan bersama-sama
-→ Token: ['ber-', 'jalan', 'ber-', 'sama', '-', 'sama']
-
-[Kalimat 17]: semoga kamu baik-baik saja
-→ Token: ['semoga', 'kamu', 'baik', '-', 'baik', 'saja']
+[Kalimat 8]: sama-sama
+Token: ['sama', '-', 'sama']
 ```
 
 ---
