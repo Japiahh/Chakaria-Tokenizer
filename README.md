@@ -1,7 +1,7 @@
 # Chakaria-Tokenizer
 I built Tokenizer for Indonesian Language Data Cleaning
 
-Chakaria-Tokenizer is a specialized text preprocessing tool designed to handle the linguistic complexity of Bahasa Indonesia. Unlike standard white-space tokenizers, Chakaria employs a hybrid approach—combining rule-based morphological segmentation with dictionary-based validation—to break down words into their meaningful components (stems, affixes, particles) while preserving semantic structure.
+Chakaria-Tokenizer is a specialized text preprocessing tool designed to handle the linguistic complexity of Bahasa Indonesia. Unlike standard white space tokenizers, Chakaria employs a hybrid approach combining rule based morphological segmentation with dictionary based validation to break down words into their meaningful components (stems, affixes, particles) while preserving semantic structure.
 
 This tool is optimized for NLP pipelines, linguistic analysis, and deep data cleaning tasks where understanding word structure is crucial.
 
@@ -11,10 +11,10 @@ This tool is optimized for NLP pipelines, linguistic analysis, and deep data cle
 
 We have significantly upgraded the core tokenization logic to handle complex agglutination cases:
 
-* **Deep Recursive Validation:** The tokenizer now verifies the "deep root" of a word before splitting. This prevents over-stemming (e.g., ensuring *'menang'* remains *'menang'*, not *'me-' + 'nang'* unless *'nang'* is a valid root).
-* **Process-Oriented Splitting:** Removed "Early Exit" limitations. Words are now analyzed for morphological structure even if they exist in the dictionary (e.g., *'memakan'* is correctly split into `['me-', 'makan']` instead of remaining `['memakan']`).
-* **Greedy Affix Matching:** Implemented length-priority sorting to ensure the longest valid prefix/suffix is processed first (e.g., distinguishing *'meng-'* from *'me-'*).
-* **Smart Clitic & Particle Handling:** Improved logic for separating enclitics (e.g., *-ku*, *-mu*, *-nya*) and particles (e.g., *-lah*, *-kah*) without breaking the root word.
+* **Deep Recursive Validation:** The tokenizer now verifies the deep root of a word before splitting. This prevents over stemming (ensuring *'menang'* remains *'menang'*, not *'me-' + 'nang'* unless *'nang'* is a valid root).
+* **Process-Oriented Splitting:** Removed Early Exit limitations. Words are now analyzed for morphological structure even if they exist in the dictionary (*'memakan'* is correctly split into `['me-', 'makan']` instead of remaining `['memakan']`).
+* **Greedy Affix Matching:** Implemented length priority sorting to ensure the longest valid prefix/suffix is processed first (distinguishing *'meng-'* from *'me-'*).
+* **Smart Clitic & Particle Handling:** Improved logic for separating enclitics (*-ku*, *-mu*, *-nya*) and particles (e.g., *-lah*, *-kah*) without breaking the root word.
 
 ---
 
@@ -26,7 +26,7 @@ We have significantly upgraded the core tokenization logic to handle complex agg
     * **Suffixes:** Isolates transitive/benefactive markers (e.g., *'-kan'*, *'-i'*, *'-an'*).
 * **Reduplication Normalization:** Handles Indonesian repetition patterns (e.g., *"anak-anak"* → `"anak"`, `"-"`, `"anak"`).
 * **Particle & Clitic Isolation:** Cleanly splits sentence particles ("pergilah" → "pergi", "-lah").
-* **Punctuation Handling:** Context-aware separation of punctuation from words.
+* **Punctuation Handling:** Context aware separation of punctuation from words.
 * **Clean Output:** Automatically filters empty tokens and noise.
 
 ---
