@@ -14,7 +14,7 @@ suffixes = ["kan", "nya", "ku", "mu", "an", "i", "in"]
 particles = ["lah", "kah", "tah", "pun"]
 
 def load_base_words():
-    from data import kadas
+    from data import kada
     return set(kadas["kata_dasar"])
 
 kata_dasar = load_base_words()
@@ -361,4 +361,5 @@ class Checker:
     def invalid_tokens(self, tokens):
         _, invalid = self.check_tokens(tokens)
         return invalid
+
 
