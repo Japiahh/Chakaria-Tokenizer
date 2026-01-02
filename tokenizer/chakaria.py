@@ -1,5 +1,23 @@
 import re
 from typing import List
+import string
+
+prefixes = [
+    "meng", "mem", "men", "me",
+    "ber", "ter",
+    "se", "per",
+    "pe", "pen",
+    "di", "ke",
+    "ng", 
+]
+suffixes = ["kan", "nya", "ku", "mu", "an", "i", "in"]
+particles = ["lah", "kah", "tah", "pun"]
+
+def load_base_words():
+    from preprocessing.kata_dasar.kada_cleaned import kada
+    return set(kada["kata_dasar"])
+
+kata_dasar = load_base_words()
 
 class ChakariaTokenizer:
     def __init__(
@@ -9,58 +27,23 @@ class ChakariaTokenizer:
         enable_split_particles=True,
         enable_handle_confixes=True,
         use_base_words=True,
+        verbose=False,
     ):
-        # Konfigurasi fitur
         self.enable_split_affixes = enable_split_affixes
         self.enable_handle_repeats = enable_handle_repeats
         self.enable_split_particles = enable_split_particles
         self.enable_handle_confixes = enable_handle_confixes
         self.use_base_words = use_base_words
+        self.verbose = verbose
 
-        # Prefix dan suffix (tanpa tanda '-')
-        self.prefixes = ["meng", "meny", "mem", "men", "me", "ber", "ter", "se", "diper", "per", "pe", "di", "ke"]
-        self.suffixes = ["annya", "kan", "annya", "nya", "ku", "mu", "an"]
 
-        self.particles = ["-lah", "-kah", "-tah", "-pun", "-ku", "-mu"]
-
-        self.kata_dasar = self.load_base_words()
-
-    def load_base_words(self):
-        """
-        Memuat daftar kata dasar dari file eksternal untuk referensi pemrosesan morfologi.
-
-        Fungsi ini secara otomatis mengimpor data dari file:
-        `dataset.nlp.kata_dasar.kada_cleaned` dan mengakses atribut `kada["kata_dasar"]`.
-
-        Data ini digunakan untuk:
-        - Memvalidasi hasil pemisahan afiks (prefix, suffix, konfiks),
-        - Mencegah over-splitting terhadap kata yang memang sudah utuh,
-        - Menjadi dasar bagi logika linguistik yang lebih dalam (mis. POS tagging berbasis akar kata).
-
-        Keluaran:
-        - Sebuah set (tipe data `set`) yang berisi seluruh kata dasar unik,
-        untuk mempercepat pencarian (lookup) saat proses tokenisasi.
-        """
-        from data import kadas
-        return set(kadas["kata_dasar"])
-
+#fungsi utama
     def tokenize(self, text):
-        """
-        Fungsi utama tokenisasi.
-        Jalankan pipeline:
-        1. Kata dasar checker
-        2. pre_handle_split (untuk yang gak ada di kata dasar)
-        3. Filtering token kosong
-        """
         tokens = text.split()
 
         final_tokens = []
         for token in tokens:
             token_lc = token.lower()
-            
-            if token_lc in self.kata_dasar:
-                final_tokens.append(token_lc)
-                continue
             
             preprocessed = self.pre_handle_split([token_lc])
             final_tokens.extend(preprocessed)
@@ -71,48 +54,147 @@ class ChakariaTokenizer:
 
 
     def pre_handle_split(self, tokens):
-        """
-        Menjalankan pipeline handle sesuai urutan:
-        1. handle_punctuation
-        2. split_affixes
-        3. handle_repeats
-        4. split_particles
-        """
-
-        # 1. Handle punctuation
         tokens = self.handle_punctuation(tokens)
-
-        # 2. Split affixes
-        if self.enable_split_affixes:
-            new_tokens = []
-            for token in tokens:
-                new_tokens.extend(self.split_affixes([token]))
-            tokens = new_tokens
-
-        # 3. Handle reduplikasi
         if self.enable_handle_repeats:
             new_tokens = []
             for token in tokens:
-                new_tokens.extend(self.handle_repeats([token]))
+                if token.lower() in kata_dasar and "-" not in token:
+                     new_tokens.append(token)
+                else:
+                     new_tokens.extend(self.handle_repeats([token]))
             tokens = new_tokens
 
-        # 4. Split particles
         if self.enable_split_particles:
             tokens = self.split_particles(tokens)
 
+        if self.enable_split_affixes:
+            new_tokens = []
+            for token in tokens:
+                token_lc = token.lower()
+
+                if token_lc in kata_dasar or token.startswith('-'):
+                    new_tokens.append(token)
+                    continue
+
+                splitted = self.split_affixes([token])
+                
+                if len(splitted) > 1 and splitted[0] == 'ku-':
+                    stem_part = splitted[1] 
+                    
+                    if len(stem_part) <= 4:
+                        new_tokens.append(token) 
+                        continue
+                
+                new_tokens.extend(splitted)
+            
+            tokens = new_tokens
+
+        tokens = self._greedy_kada_split(tokens)
+
         return tokens
 
-    def is_base_word(self, token):
-        """
-        Cek apakah token adalah kata dasar.
-        """
-        return token in self.kata_dasar
+#Mechaism
+    def _all_final(self, tokens):
+        return all(self._is_morphologically_final(t) for t in tokens)
 
+    def _is_morphologically_final(self, token):
+        if token not in kata_dasar:
+            return False
+
+        for p in prefixes:
+            if token.startswith(p):
+                return False
+
+        for s in suffixes:
+            if token.endswith(s):
+                return False
+
+        return True
+
+    def _greedy_kada_split(self, tokens):
+        result = []
+        i = 0
+
+        while i < len(tokens):
+            found_base = None
+            found_end = i + 1
+
+            for j in range(i + 1, len(tokens) + 1):
+                gabung = ''.join(tokens[i:j])
+                if gabung in kata_dasar:
+                    found_base = gabung
+                    found_end = j
+
+            if found_base:
+                result.append(found_base)
+                i = found_end
+            else:
+                result.append(tokens[i])
+                i += 1
+
+        return result
+    
+    def _recursive_split(self, token):
+        if "-" in token:
+            return [token]
+
+        prefix_processed = self.split_prefix(token)
+        
+        if len(prefix_processed) > 1 or prefix_processed[0] != token:
+            return prefix_processed
+            
+        suffix_processed = self.split_suffix(token)
+        
+        return suffix_processed
+    
+    def _check_deep_validity(self, word):
+        if len(word) < 2: 
+            return False
+            
+        if word in kata_dasar:
+            return True
+            
+        suffix_check = self.split_suffix(word)
+        if len(suffix_check) > 1: 
+            base = suffix_check[0]
+            if base in kata_dasar:
+                return True
+            
+            if self._check_deep_validity(base):
+                return True
+
+        for prefix in prefixes:
+            if word.startswith(prefix):
+                stem = word[len(prefix):]
+                if len(stem) < len(word):
+                    if self._check_deep_validity(stem):
+                        return True
+
+        return False
+    
+    def _get_deep_root(self, word):
+        if len(word) < 2: return None
+        if word in kata_dasar: return word
+            
+        suffix_check = self.split_suffix(word)
+        if len(suffix_check) > 1:
+            base = suffix_check[0]
+            if base in kata_dasar: return base
+            
+            res = self._get_deep_root(base)
+            if res: return res
+
+        for prefix in prefixes:
+            if word.startswith(prefix):
+                stem = word[len(prefix):]
+                if len(stem) < len(word): 
+                    res = self._get_deep_root(stem)
+                    if res: return res
+        
+        return None
+    
+#spliting
     def handle_punctuation(self, tokens):
-        """
-        Memisahkan tanda baca dari kata.
-        Mempertimbangkan tanda hubung pada kata ulang dan majemuk.
-        """
         processed = []
         for token in tokens:
             split = re.findall(r"\w+|[.,!?;:\-\"'\(\)]", token)
@@ -120,10 +202,6 @@ class ChakariaTokenizer:
         return processed
 
     def handle_repeats(self, tokens: List[str]) -> List[str]:
-        """
-        Menangani kata ulang seperti 'anak-anak', 'berjalan-jalan'.
-        Token akan dipisah dan diurai menjadi bagian-bagian logis.
-        """
         result = []
 
         for token in tokens:
@@ -137,15 +215,14 @@ class ChakariaTokenizer:
                     continue
 
             found = False
-
-            for prefix in self.prefixes:
+            for prefix in prefixes:
                 if token.startswith(prefix):
                     sisa = token[len(prefix):]
                     if len(sisa) % 2 == 0:
                         half = len(sisa) // 2
                         first = sisa[:half]
                         second = sisa[half:]
-                        if first == second and first in self.kata_dasar:
+                        if first == second and first in kata_dasar:
                             result.extend([prefix, first, second])
                             found = True
                             break
@@ -157,7 +234,7 @@ class ChakariaTokenizer:
                 half = len(token) // 2
                 part1 = token[:half]
                 part2 = token[half:]
-                if part1 == part2 and part1 in self.kata_dasar:
+                if part1 == part2 and part1 in kata_dasar:
                     result.extend([part1, part2])
                     continue
 
@@ -166,134 +243,121 @@ class ChakariaTokenizer:
         return result
 
     def split_affixes(self, tokens):
-        """
-        Memanggil pemrosesan prefix dan suffix secara terpisah untuk setiap token.
-        Fungsi ini akan memeriksa dan memisahkan awalan (prefix) serta akhiran (suffix)
-        dari setiap token, dengan mempertimbangkan daftar kata dasar sebagai validasi.
-        """
-        result = []
+        final_result = []
 
         for token in tokens:
-            original = token
-            token_lower = token.lower()
-            parts = []
+            prefix_processed = self.split_prefix(token)
+            stem_candidate = prefix_processed[-1]
+            prefixes = prefix_processed[:-1]
+            suffix_processed = self.split_suffix(stem_candidate)
+            final_result.extend(prefixes + suffix_processed)
 
-            # Step 1
-            prefix = ""
-            for p in sorted(self.prefixes, key=lambda x: -len(x)):
-                if token_lower.startswith(p):
-                    candidate = token_lower[len(p):]
-                    if candidate in self.kata_dasar or any(candidate.endswith(s) for s in self.suffixes):
-                        prefix = p
-                        token = token[len(p):] 
-                        break
-            if prefix:
-                parts.append(prefix + '-')
-
-            # Step 2
-            suffix_parts = self.split_suffix(token)
-
-            # Step 3
-            if suffix_parts:
-                base = suffix_parts[0]
-                suffixes = suffix_parts[1:]
-
-                parts.append(base)  
-                parts.extend(suffixes)  
-
-            else:
-                parts.append(original)  
-
-            result.extend(parts)
-
-        return result
+        return final_result
 
     def split_prefix(self, token):
-        """
-        Memisahkan awalan dari kata dasar jika cocok dengan pola regex.
-        Mempertimbangkan daftar kata dasar agar pemisahan valid.
+        token_lc = token.lower()
+        if token_lc in kata_dasar:
+            return [token]
 
-        Proses:
-        - Mencocokkan token dengan daftar pola prefix menggunakan regex.
-        - Jika ditemukan prefix:
-            - Prefix dihapus dari token sementara.
-            - Dicek apakah sisa token termasuk dalam base_words.
-            - Jika ya, kembalikan prefix dan akar kata sebagai dua token.
-            - Jika tidak, biarkan token tetap utuh (hindari over-splitting).
-        
-        Catatan:
-        - Menggunakan urutan pola yang lebih panjang terlebih dahulu agar awalan kompleks dideteksi lebih dulu (mis. 'meny-' sebelum 'me-').
-        """
-        for prefix in self.prefixes:
-            if token.lower().startswith(prefix):
-                root_candidate = token[len(prefix):]
-                if root_candidate.lower() in self.kata_dasar:
-                    return [prefix + '-', root_candidate]
-        return [token]
+        result = []
+        current = token_lc
+        while True:
+            candidates = []
+            sorted_prefixes = sorted(prefixes, key=len, reverse=True)
+            for prefix in sorted_prefixes:
+                if current.startswith(prefix):
+                    stem_candidate = current[len(prefix):]
+                    root_found = self._get_deep_root(stem_candidate)
+                    if root_found:
+                        candidates.append((prefix, root_found, stem_candidate))
+            
+
+            if candidates:
+                best_match = max(candidates, key=lambda x: (len(x[1]), len(x[0])))
+                chosen_prefix = best_match[0]
+                current = best_match[2]
+                result.append(chosen_prefix + '-')
+                if current in kata_dasar:
+                    break
+            else:
+                break
+
+        result.append(current)
+        return result
 
     def split_suffix(self, token):
-        """
-        Memisahkan akhiran dari kata jika sesuai.
-        Bekerja sama dengan split_prefix untuk dekomposisi afiks penuh.
-
-        Proses:
-        - Mencocokkan token dengan pola suffix menggunakan regex dari akhir kata.
-        - Jika ditemukan suffix:
-            - Potong suffix dari token sementara.
-            - Periksa apakah akar katanya ada dalam daftar base_words.
-            - Jika ya, kembalikan akar kata dan suffix sebagai dua token.
-            - Jika tidak, biarkan token tetap utuh (hindari over-splitting).
-
-        Catatan:
-        - Suffix harus diurutkan dari yang paling panjang untuk menghindari pemotongan tidak lengkap.
-        """
         token_lc = token.lower()
-
-        if token_lc in self.kata_dasar:
+            
+        if token_lc in kata_dasar:
             return [token_lc]
-        
+
         result = []
+        current = token_lc
 
-        for suffix in self.suffixes:
-            if token_lc.endswith(suffix):
-                base = token_lc[:-len(suffix)]
-                if base in self.kata_dasar:
-                    result = [base, f"-{suffix}"]
+        while True:
+            matched_suffix = None
+            for suffix in sorted(suffixes, key=len, reverse=True):
+                if current.endswith(suffix):
+                    base_candidate = current[:-len(suffix)]
+                    if base_candidate in kata_dasar:
+                        matched_suffix = suffix
+                        break 
+                    
+                    if matched_suffix is None and any(base_candidate.endswith(s) for s in suffixes):
+                        matched_suffix = suffix
+
+            if matched_suffix:
+                result.insert(0, '-' + matched_suffix)
+                current = current[:-len(matched_suffix)]
+                if current in kata_dasar:
                     break
-        if not result:
-            result = [token_lc]
+            else:
+                break
 
+        result.insert(0, current)  
         return result
 
     def split_particles(self, tokens):
-        """
-        Menangani partikel seperti '-lah', '-pun', '-kah', '-tah'.
-        Partikel tidak memengaruhi makna dasar, tetapi penting dalam struktur kalimat.
-
-        Proses:
-        - Iterasi setiap token dan periksa apakah mengandung partikel di akhir.
-        - Gunakan regex untuk mencocokkan partikel.
-        - Jika ditemukan:
-            - Pisahkan partikel dari kata dasarnya.
-            - Tambahkan keduanya sebagai token terpisah.
-        - Jika tidak ditemukan:
-            - Simpan token seperti semula.
-        """
         processed = []
-
         for token in tokens:
             matched = False
-            for particle in sorted(self.particles, key=len, reverse=True):
-                particle_clean = particle.replace("-", "")
-                if token.endswith(particle_clean):
-                    root = token[:-len(particle_clean)]
+            for particle in sorted(particles, key=len, reverse=True):
+                if token.endswith(particle):
+                    root = token[:-len(particle)]
                     if len(root) > 1:
                         processed.append(root)
-                        processed.append(particle)  
+                        processed.append('-'+particle)  
                         matched = True
                         break
             if not matched:
                 processed.append(token)
-
         return processed
 
+class Checker:
+    def __init__(self):
+        self.kata_dasar = kata_dasar 
+
+    def check_tokens(self, tokens):
+        valid = []
+        invalid = []
+
+        for tok in tokens:
+            clean = tok.lstrip('-')
+            if all(c in string.punctuation for c in tok):
+                continue
+
+            if clean in kata_dasar:
+                valid.append(tok)
+                continue
+
+            if clean in prefixes or clean in suffixes or clean in particles:
+                valid.append(tok)
+                continue
+
+            invalid.append(tok)
+
+        return valid, invalid
+
+    def invalid_tokens(self, tokens):
+        _, invalid = self.check_tokens(tokens)
+        return invalid
