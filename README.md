@@ -1,4 +1,4 @@
-<h1 align="center"><img align="center" height="35" src="https://i.imgflip.com/adfpaj.gif"/>Chakaria-Tokenizer<img align="center" height="35" src="https://i.imgflip.com/adfpaj.gif"/></h1>
+<h1 align="center"><img align="center" height="35" src="https://i.imgflip.com/adfqd6.gif"/>Chakaria-Tokenizer<img align="center" height="35" src="https://i.imgflip.com/adfqd6.gif"/></h1>
 I built Tokenizer for Indonesian Language Data Cleaning
 
 ---
