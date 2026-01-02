@@ -1,4 +1,4 @@
-<h1 align="center"><img align="center" height="35" src="https://i.imgflip.com/adfqd6.gif"/>Chakaria-Tokenizer<img align="center" height="35" src="https://i.imgflip.com/adfqd6.gif"/></h1>
+<h1 align="center"><img align="center" height="35" src="https://i.imgflip.com/adfqd6.gif"/> Chakaria-Tokenizer <img align="center" height="35" src="https://i.imgflip.com/adfqd6.gif"/></h1>
 I built Tokenizer for Indonesian Language Data Cleaning
 
 ---
@@ -9,7 +9,7 @@ This tool is optimized for NLP pipelines, linguistic analysis, and deep data cle
 
 ---
 
-<h2 align="left">Chakaria-Tokenizer<img align="center" height="35" src="https://i.imgflip.com/adfpaj.gif"/></h2>
+<h2 align="left">Chakaria-Tokenizer <img align="center" height="35" src="https://i.imgflip.com/adfpaj.gif"/></h2>
 
 We have significantly upgraded the core tokenization logic to handle complex agglutination cases:
 
