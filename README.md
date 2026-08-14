@@ -56,8 +56,6 @@ graph TD
 3. Split Particles: Detaches particles (-lah, -kah, -tah, -pun) only if the remaining stem is valid.
 4. Split Affixes: The core engine. It iteratively strips prefixes and suffixes, validating the remaining stem against the dictionary at every step to ensure linguistic validity.
 
----
-
 ## Example
 ### How to use
 ```bash
